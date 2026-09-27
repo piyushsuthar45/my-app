@@ -1145,20 +1145,77 @@ async function openScanner(){
     await loadModel();
 
     setScanStatus(
+      "Connecting to tattoo library..."
+    );
+
+    // Keep the scanner visible immediately, but make sure the
+    // anonymous Supabase session is ready before querying the library.
+    const sessionReady = await ensureAnonymousSession();
+
+    if(!sessionReady){
+      console.warn("Supabase session is not ready yet.");
+      setScanStatus(
+        "Connecting... Please wait"
+      );
+
+      // Give the session a moment to recover, then retry once.
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      await ensureAnonymousSession();
+    }
+
+    setScanStatus(
       "Loading tattoo references..."
     );
 
-    await loadTattoosForScanner();
+    try{
+      await loadTattoosForScanner();
 
-    setScanStatus(
-      "Point the camera at a tattoo"
-    );
+      setScanStatus(
+        referenceEmbeddings.size
+          ? "Point the camera at a tattoo"
+          : "No tattoo references available"
+      );
 
-    startRecognition();
+      if(referenceEmbeddings.size){
+        startRecognition();
+      }
+
+    }catch(error){
+
+      console.error("Tattoo library load error:", error);
+
+      // Do NOT show the browser's "Failed to fetch" alert on startup.
+      // The camera remains usable and the user can retry without reopening.
+      setScanStatus(
+        "Tattoo library unavailable — retrying..."
+      );
+
+      setTimeout(async ()=>{
+        try{
+          await ensureAnonymousSession();
+          await loadTattoosForScanner();
+
+          setScanStatus(
+            referenceEmbeddings.size
+              ? "Point the camera at a tattoo"
+              : "No tattoo references available"
+          );
+
+          if(referenceEmbeddings.size){
+            startRecognition();
+          }
+        }catch(retryError){
+          console.error("Tattoo library retry failed:", retryError);
+          setScanStatus(
+            "Unable to connect to tattoo library"
+          );
+        }
+      }, 1800);
+    }
 
   }catch(error){
 
-    console.error(error);
+    console.error("Camera error:", error);
 
     setScanStatus(
       "Camera could not start"
