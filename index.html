@@ -1712,6 +1712,10 @@ async function playTattooMedia(tattoo){
   let mediaFound=false;
 
 
+  /* ================================
+     VIDEO
+  ================================ */
+
   if(tattoo.video_path){
 
     const result =
@@ -1745,14 +1749,18 @@ async function playTattooMedia(tattoo){
 
       mediaFound=true;
 
-      video.play().catch(
-        () => {
-          // Browser autoplay restriction.
-        }
-      );
+      try{
+        await video.play();
+      }catch(error){
+        console.log("Video autoplay blocked:",error);
+      }
     }
   }
 
+
+  /* ================================
+     AUDIO
+  ================================ */
 
   if(tattoo.audio_path){
 
@@ -1779,6 +1787,9 @@ async function playTattooMedia(tattoo){
 
       audio.controls=true;
       audio.autoplay=true;
+      audio.preload="auto";
+      audio.playsInline=true;
+      audio.volume=1.0;
 
       audioContainer.appendChild(
         audio
@@ -1786,11 +1797,71 @@ async function playTattooMedia(tattoo){
 
       mediaFound=true;
 
-      audio.play().catch(
-        () => {
-          // Browser autoplay restriction.
-        }
+      /*
+        Try automatic playback first.
+        Mobile browsers may block autoplay because
+        recognition happens asynchronously.
+      */
+      try{
+
+        await audio.play();
+
+      }catch(error){
+
+        console.log(
+          "Audio autoplay blocked:",
+          error
+        );
+
+        const playButton =
+          document.createElement("button");
+
+        playButton.className =
+          "primary-btn";
+
+        playButton.type="button";
+
+        playButton.textContent =
+          "🔊 TAP TO PLAY VOICE";
+
+        playButton.style.marginTop="10px";
+        playButton.style.width="100%";
+
+        playButton.onclick = async function(){
+
+          try{
+
+            await audio.play();
+
+            playButton.remove();
+
+          }catch(playError){
+
+            console.error(
+              "Audio playback error:",
+              playError
+            );
+
+            playButton.textContent =
+              "TAP AGAIN TO PLAY VOICE";
+          }
+        };
+
+        audioContainer.appendChild(
+          playButton
+        );
+      }
+    }else{
+
+      console.error(
+        "Audio signed URL error:",
+        result.error
       );
+
+      audioContainer.innerHTML =
+        `<p class="status">
+          Audio could not be loaded.
+         </p>`;
     }
   }
 
