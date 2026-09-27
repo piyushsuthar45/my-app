@@ -1,5 +1,3 @@
-  
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1912,15 +1910,10 @@ async function playTattooMedia(tattoo){
       }
     }else{
 
-      console.error(
-        "Audio signed URL error:",
-        result.error
-      );
+      console.error("Audio signed URL error:", result.error);
 
       audioContainer.innerHTML =
-        `<p class="status">
-          Audio could not be loaded.
-         </p>`;
+        `<p class="status">Audio could not be loaded. Check Storage read policy.</p>`;
     }
   }
 
@@ -2093,12 +2086,8 @@ async function addTattoo(){
 
 
     /*
-      The tattoos table has a CHECK constraint named
-      tattoo_has_media. It requires audio_path or video_path
-      to be present when the row is inserted.
-
-      Generate the tattoo id first, upload media, then create
-      the database row with the final media paths already set.
+      Create a tattoo id first, upload the selected media,
+      then save the tattoo record.
     */
 
     if(!audio && !video){
@@ -2721,97 +2710,58 @@ async function editTattoo(id){
 
 async function deleteTattoo(id){
 
-  const tattoo =
-    tattoos.find(
-      x=>x.id===id
-    );
+  const tattoo = tattoos.find(x=>x.id===id);
+  if(!tattoo) return;
 
-  if(!tattoo){
-    return;
-  }
-
-  const confirmed =
-    confirm(
-      `Delete "${tattoo.tattoo_name}"?`
-    );
-
-  if(!confirmed){
-    return;
-  }
+  const confirmed = confirm(`Delete "${tattoo.tattoo_name}"?`);
+  if(!confirmed) return;
 
   try{
-
-    /*
-      Delete reference images.
-    */
-
-    const refs =
-      tattoo.tattoo_references || [];
-
-    const imagePaths =
-      refs.map(
-        x=>x.image_path
-      );
+    const imagePaths = (tattoo.tattoo_references || [])
+      .map(x=>x.image_path)
+      .filter(Boolean);
 
     if(imagePaths.length){
-
-      await supabaseClient.storage
+      const r = await supabaseClient.storage
         .from("tattoo-images")
-        .remove(
-          imagePaths
-        );
+        .remove(imagePaths);
+      if(r.error) throw new Error("Image delete failed: " + r.error.message);
     }
-
 
     if(tattoo.audio_path){
-
-      await supabaseClient.storage
+      const r = await supabaseClient.storage
         .from("tattoo-audio")
-        .remove([
-          tattoo.audio_path
-        ]);
+        .remove([tattoo.audio_path]);
+      if(r.error) throw new Error("Audio delete failed: " + r.error.message);
     }
-
 
     if(tattoo.video_path){
-
-      await supabaseClient.storage
+      const r = await supabaseClient.storage
         .from("tattoo-video")
-        .remove([
-          tattoo.video_path
-        ]);
+        .remove([tattoo.video_path]);
+      if(r.error) throw new Error("Video delete failed: " + r.error.message);
     }
 
+    const result = await supabaseClient
+      .from("tattoos")
+      .delete()
+      .eq("id", id)
+      .select("id");
 
-    /*
-      DB record.
-      tattoo_references are removed
-      through ON DELETE CASCADE.
-    */
-
-    const result =
-      await supabaseClient
-        .from("tattoos")
-        .delete()
-        .eq("id",id);
-
-    if(result.error){
-
-      throw result.error;
+    if(result.error) throw result.error;
+    if(!result.data || result.data.length !== 1){
+      throw new Error("Tattoo was not deleted. Check the admin DELETE policy in Supabase.");
     }
 
+    tattoos = tattoos.filter(x=>x.id !== id);
     await loadTattoos();
+    alert("Tattoo deleted successfully.");
 
   }catch(error){
-
-    console.error(error);
-
-    alert(
-      "Unable to delete tattoo."
-    );
+    console.error("Delete tattoo error:", error);
+    alert(error.message || "Unable to delete tattoo.");
   }
 }
-
 
 /* =====================================================
    HELPERS
@@ -2853,7 +2803,17 @@ window.addEventListener(
     // Open scanner immediately; authentication/network never blocks the UI.
     checkSession().catch(error=>{
       console.error("Startup error:",error);
-      openScanner();
+
+      openScanner().catch(scannerError=>{
+        console.error("Scanner fallback error:",scannerError);
+
+        const status = document.getElementById("scanStatus");
+        if(status){
+          status.textContent =
+            scannerError?.message ||
+            "Scanner is starting. Please wait...";
+        }
+      });
     });
   }
 );
@@ -2862,129 +2822,3 @@ window.addEventListener(
 
 </body>
 </html>
-
-
-voice play nhi hoti ottatoo delete nho hoa h 
-
-Haan bhai, dono issue ka fix kar diya:
-
-🔊 Voice play nahi ho rahi — private Supabase Storage ki read permission ki wajah se ho sakta hai. Iske liye ye SQL ek baar Supabase SQL Editor me run karo:
-
-DROP POLICY IF EXISTS "LIVING TATTOO media read" ON storage.objects;
-
-CREATE POLICY "LIVING TATTOO media read"
-ON storage.objects
-FOR SELECT
-TO authenticated
-USING (
-  bucket_id IN (
-    'tattoo-images',
-    'tattoo-audio',
-    'tattoo-video'
-  )
-);
-Isse logged-in/anonymous scanner signed audio URL read kar payega.
-
-🗑️ Tattoo delete nahi ho raha tha — HTML me delete function bhi fix kar diya hai. Ab agar delete permission ka issue hoga to exact error show hoga.
-
-Updated file
-
-Ab steps:
-
-Purani HTML ki jagah ye file rakho.
-
-Supabase me upar wala SQL run karo.
-
-Live Server se open karo.
-
-Admin login → tattoo add/check karo.
-
-Scanner se tattoo scan karo.
-
-Voice test karo.
-
-Admin → DELETE test karo.
-
-Agar voice phir bhi nahi chale, screenshot bhej dena—phir hum direct audio storage/path issue pakdenge.
-
-
-
-
-Library
-/
-LIVING_TATTOO_Voice_Delete_Fixed.html
-
-
-
-
-
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<meta name="theme-color" content="#050505">
-<title>LIVING TATTOO</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1"></script>
-
-<style>
-:root{
-  --bg:#050505;
-  --surface:#0c0c0f;
-  --surface-2:#111116;
-  --surface-3:#17171d;
-  --line:rgba(255,255,255,.10);
-  --line-strong:rgba(255,255,255,.18);
-  --text:#f7f7f8;
-  --muted:#8d8e96;
-  --soft:#b8b9c0;
-  --accent:#ffffff;
-  --success:#8cffc1;
-  --danger:#ff7272;
-  --shadow:0 35px 100px rgba(0,0,0,.55);
-  --radius:24px;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;min-height:100%;background:#050505;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-body{overflow-x:hidden}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 50% -10%,rgba(255,255,255,.08),transparent 30%),radial-gradient(circle at 0% 100%,rgba(255,255,255,.035),transparent 28%);z-index:-1}
-button,input{font-family:inherit}
-button{cursor:pointer}
