@@ -1,38 +1,4 @@
-
-Haan, samajh gaya 👍
-
-Aap Scan open karte ho, pehle “Failed to fetch” aata hai, uske baad scanner open ho jata hai.
-
-Ye likely app startup par Supabase se tattoos/reference data load karte waqt request fail hone ki wajah se hai. Camera ka main issue nahi lag raha.
-
-Main current HTML ko check karke startup wala error remove/fix kar sakta hoon.
-Bas mujhe current LIVING_TATTOO_Direct_Scanner_FINAL.html file bhej do/upload kar do, phir main usi file me exact fix karke de dunga.
-
-
-
-Pasted text(2).txt
-Document
-
-Haan bhai, file check karke exact issue fix kar diya. Tumhare code me scanner open hone ke baad Supabase tattoo library fetch ho rahi thi, aur us request ke fail hone par "Failed to fetch" alert aa raha tha. File me scanner startup aur tattoo-reference loading isi flow me connected hain. 
-
-
-Maine fix kiya:
-✅ "Failed to fetch" ka blocking popup remove
-
-✅ Supabase anonymous session ready hone ke baad tattoo data load hoga
-
-✅ Connection fail ho to automatic retry
-
-✅ Camera pehle open rahega
-
-✅ 1 tattoo image ke saath recognition compatible kiya
-
-✅ Existing audio autoplay + tap fallback ko disturb nahi kiya
-
-Fixed file:
-
-
-Isko Live Server se run karke Scan karo. Ab pehle "Failed to fetch" popup nahi aana chahiye. 
+  
 
 <!DOCTYPE html>
 <html lang="en">
