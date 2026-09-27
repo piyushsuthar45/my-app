@@ -1,0 +1,2734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<title>LIVING TATTOO</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1"></script>
+
+<style>
+:root{
+  --bg:#050505;
+  --surface:#0c0c0f;
+  --surface-2:#111116;
+  --surface-3:#17171d;
+  --line:rgba(255,255,255,.10);
+  --line-strong:rgba(255,255,255,.18);
+  --text:#f7f7f8;
+  --muted:#8d8e96;
+  --soft:#b8b9c0;
+  --accent:#ffffff;
+  --success:#8cffc1;
+  --danger:#ff7272;
+  --shadow:0 35px 100px rgba(0,0,0,.55);
+  --radius:24px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;min-height:100%;background:#050505;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 50% -10%,rgba(255,255,255,.08),transparent 30%),radial-gradient(circle at 0% 100%,rgba(255,255,255,.035),transparent 28%);z-index:-1}
+button,input{font-family:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+
+/* ---------- shared premium language ---------- */
+.eyebrow{display:flex;align-items:center;gap:8px;color:#9b9ca5;font-size:10px;letter-spacing:2.4px;font-weight:800;text-transform:uppercase;margin-bottom:20px}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 14px rgba(255,255,255,.9)}
+.brand-lockup{display:flex;align-items:center;gap:14px}
+.brand-mark,.camera-mark{width:44px;height:44px;border:1px solid rgba(255,255,255,.2);border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#202026,#0a0a0d);font-size:12px;font-weight:950;letter-spacing:1px;box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 12px 35px rgba(0,0,0,.35)}
+.logo{font-size:27px;font-weight:950;letter-spacing:3.8px;line-height:1}
+.brand-caption{margin-top:5px;color:#6f7078;font-size:8px;letter-spacing:2.4px;font-weight:800}
+.mini-brand{font-size:13px;font-weight:950;letter-spacing:2.5px;margin-bottom:28px}
+.mini-brand span{color:#777881}
+.hero-rule{height:1px;background:linear-gradient(90deg,rgba(255,255,255,.35),rgba(255,255,255,.03));margin:26px 0 17px}
+.feature-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:24px 0 6px}
+.feature-strip>div{padding:12px 10px;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:rgba(255,255,255,.025)}
+.feature-strip strong{display:block;font-size:9px;color:#fff;letter-spacing:1px;margin-bottom:6px}
+.feature-strip span{display:block;color:#696a72;font-size:8px;letter-spacing:1.1px;font-weight:800}
+
+/* ---------- auth ---------- */
+.auth-page{min-height:100vh;min-height:100svh;display:flex;justify-content:center;align-items:center;padding:24px;background:radial-gradient(circle at 50% 10%,#17171b 0,#08080a 34%,#030304 72%);position:relative;overflow:hidden}
+.auth-page:before{content:"";position:absolute;width:600px;height:600px;border:1px solid rgba(255,255,255,.025);border-radius:50%;left:50%;top:42%;transform:translate(-50%,-50%);box-shadow:0 0 0 90px rgba(255,255,255,.012),0 0 0 180px rgba(255,255,255,.008)}
+.auth-card{position:relative;width:100%;max-width:480px;padding:36px;border:1px solid rgba(255,255,255,.13);border-radius:30px;background:linear-gradient(145deg,rgba(22,22,27,.94),rgba(8,8,11,.96));backdrop-filter:blur(30px);box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.07);animation:cardIn .55s ease both}
+.auth-card:after{content:"";position:absolute;inset:1px;border-radius:29px;pointer-events:none;background:linear-gradient(120deg,rgba(255,255,255,.045),transparent 35%,transparent 70%,rgba(255,255,255,.018))}
+.compact-auth{max-width:460px}
+.tagline{text-align:left;color:#a2a3aa;font-size:14px;line-height:1.65;margin:0}
+.form-title{font-size:27px;font-weight:900;letter-spacing:-.7px;margin-bottom:8px}
+.form-subtitle{color:#83848c;font-size:13px;line-height:1.6;margin-bottom:24px}
+.input-label{display:block;color:#aeb0b8;font-size:11px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;margin:18px 0 8px}
+.input{width:100%;height:54px;padding:0 16px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:#08080b;color:#fff;outline:none;font-size:14px;transition:.25s;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.input::placeholder{color:#55565e}
+.input:focus{border-color:rgba(255,255,255,.35);box-shadow:0 0 0 4px rgba(255,255,255,.035),inset 0 1px 0 rgba(255,255,255,.04)}
+.choice-btn,.primary-btn,.back-btn{position:relative;overflow:hidden;width:100%;border-radius:15px;font-weight:900;letter-spacing:.5px;transition:transform .25s,box-shadow .25s,border-color .25s}
+.choice-btn{padding:17px;border:1px solid rgba(255,255,255,.11);background:linear-gradient(145deg,#17171c,#0b0b0e);color:#fff;margin-top:11px;font-size:13px}
+.choice-btn:after,.primary-btn:after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-55%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transform:skewX(-20deg);transition:left .55s}
+.choice-btn:hover:after,.primary-btn:hover:after{left:120%}
+.choice-btn:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.28);box-shadow:0 15px 35px rgba(0,0,0,.35)}
+.primary-btn{height:54px;border:1px solid #fff;background:#f4f4f5;color:#050505;margin-top:19px;box-shadow:0 15px 35px rgba(0,0,0,.25)}
+.primary-btn:hover{transform:translateY(-2px);box-shadow:0 20px 45px rgba(0,0,0,.4)}
+.back-btn{height:48px;border:1px solid rgba(255,255,255,.09);background:#101014;color:#a9aab1;margin-top:10px}
+.back-btn:hover{border-color:rgba(255,255,255,.2);color:#fff}
+.error{margin-top:14px;padding:12px 14px;border-radius:12px;background:rgba(120,25,25,.18);border:1px solid rgba(255,90,90,.22);color:#ff9a9a;font-size:12px;line-height:1.5}
+
+/* ---------- admin ---------- */
+#adminApp{min-height:100vh;background:radial-gradient(circle at 80% 0%,rgba(255,255,255,.045),transparent 28%),#050507}
+.premium-admin-header{height:76px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(5,5,7,.78);backdrop-filter:blur(24px);position:sticky;top:0;z-index:500}
+.header-inner{height:100%;max-width:1250px;margin:auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:14px;font-weight:950;letter-spacing:3px}
+.brand:before{content:"LT";display:inline-grid;place-items:center;width:30px;height:30px;margin-right:10px;border:1px solid rgba(255,255,255,.14);border-radius:9px;font-size:8px;letter-spacing:1px;vertical-align:middle}
+.header-right{display:flex;align-items:center;gap:10px}
+.logout-btn{padding:10px 14px;border-radius:11px;border:1px solid rgba(255,255,255,.11);background:#101014;color:#d7d7dc;font-size:11px;font-weight:800;letter-spacing:.8px}
+.logout-btn:hover{border-color:rgba(255,255,255,.3);background:#17171c}
+.admin-container{max-width:1250px;margin:auto;padding:34px 24px 80px}
+.dashboard-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding:8px 0 26px}
+.page-title{font-size:42px;line-height:1.05;font-weight:950;letter-spacing:-1.6px;margin-bottom:9px}
+.page-subtitle{max-width:650px;color:#7f8088;font-size:13px;line-height:1.7}
+.secure-badge{white-space:nowrap;border:1px solid rgba(140,255,193,.12);background:rgba(140,255,193,.035);color:#a9d8bd;border-radius:999px;padding:10px 13px;font-size:9px;letter-spacing:1.4px;font-weight:900}
+.secure-dot,.live-badge span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#8cffc1;box-shadow:0 0 12px rgba(140,255,193,.8);margin-right:7px}
+.dashboard-divider{height:1px;background:linear-gradient(90deg,rgba(255,255,255,.12),transparent);margin-bottom:24px}
+.admin-grid{display:grid;grid-template-columns:390px 1fr;gap:18px;align-items:start}
+.panel{background:linear-gradient(145deg,rgba(18,18,23,.92),rgba(9,9,12,.94));border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:23px;box-shadow:0 20px 60px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.025)}
+.panel-title{font-size:15px;font-weight:900;letter-spacing:.2px;margin-bottom:18px}
+.panel-title:before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 12px #fff;margin:0 8px 2px 0}
+.file-input{width:100%;padding:12px;border-radius:13px;background:#08080b;color:#85868e;border:1px solid rgba(255,255,255,.08);margin-top:8px;font-size:12px}
+.file-list{display:flex;flex-direction:column;gap:8px;margin-top:9px}
+.file-chip{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.09);border-radius:11px;font-size:11px;color:#ddd}
+.file-chip-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-chip-remove{flex:0 0 auto;border:1px solid rgba(255,80,140,.35);background:rgba(255,55,120,.08);color:#ff75a8;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:800;letter-spacing:.05em;cursor:pointer}
+.file-chip-remove:hover{background:rgba(255,55,120,.18);border-color:rgba(255,80,140,.6)}
+.media-file-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;padding:10px 12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);border-radius:12px}
+.media-file-name{min-width:0;flex:1;font-size:11px;color:#bbb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.remove-media-btn{border:1px solid rgba(255,80,140,.35);background:rgba(255,55,120,.08);color:#ff75a8;border-radius:8px;padding:6px 9px;font-size:10px;font-weight:800;cursor:pointer}
+.remove-media-btn:hover{background:rgba(255,55,120,.18);border-color:rgba(255,80,140,.6)}
+.tattoo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:13px}
+.tattoo-card{background:linear-gradient(145deg,#15151a,#0d0d10);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;transition:.25s;box-shadow:0 14px 40px rgba(0,0,0,.2)}
+.tattoo-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.2);box-shadow:0 22px 55px rgba(0,0,0,.38)}
+.tattoo-image{width:100%;height:180px;object-fit:cover;background:#111}
+.tattoo-content{padding:15px}
+.tattoo-name{font-size:16px;font-weight:900;margin-bottom:5px}
+.tattoo-meta{font-size:11px;color:#7e7f87;line-height:1.75}
+.card-actions{display:flex;gap:7px;margin-top:13px}
+.small-btn{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.09);background:#19191e;color:#ddd;font-size:11px;font-weight:800}
+.small-btn:hover{border-color:rgba(255,255,255,.25)}
+.delete-btn{background:rgba(120,20,20,.15);border-color:rgba(255,80,80,.16);color:#ff9b9b}
+.status{color:#7f8088;font-size:12px;margin-top:10px;line-height:1.6}
+.search{margin-bottom:15px}
+
+/* ---------- camera ---------- */
+#cameraScreen{position:fixed;inset:0;background:#000;z-index:1000;overflow:hidden}
+#camera{width:100%;height:100%;object-fit:cover}
+.camera-dark{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.62),transparent 24%,transparent 66%,rgba(0,0,0,.82));pointer-events:none}
+.camera-header{position:absolute;z-index:20;top:0;left:0;right:0;padding:max(18px,env(safe-area-inset-top)) 18px 18px;display:flex;justify-content:space-between;align-items:center}
+.camera-brand-block{display:flex;align-items:center;gap:10px}
+.camera-mark{width:38px;height:38px;border-radius:12px;font-size:10px}
+.camera-logo{font-size:13px;font-weight:950;letter-spacing:2.2px}
+.camera-subtitle{font-size:7px;letter-spacing:1.8px;color:#92939b;margin-top:4px;font-weight:800}
+.camera-actions{display:flex;align-items:center;gap:8px}
+.live-badge{padding:8px 10px;border:1px solid rgba(140,255,193,.14);border-radius:999px;background:rgba(0,0,0,.4);backdrop-filter:blur(15px);font-size:8px;letter-spacing:1.2px;color:#a9d8bd;font-weight:900}
+.camera-admin{position:relative;z-index:50;pointer-events:auto;border:1px solid rgba(139,92,246,.42);background:linear-gradient(135deg,rgba(91,33,182,.34),rgba(236,72,153,.18));backdrop-filter:blur(14px);color:#eee;padding:9px 12px;border-radius:11px;font-size:9px;font-weight:900;letter-spacing:1px;box-shadow:0 0 22px rgba(139,92,246,.12)}
+.camera-admin:hover{background:linear-gradient(135deg,rgba(109,40,217,.5),rgba(236,72,153,.28));border-color:rgba(196,181,253,.7)}
+.camera-logout{position:relative;z-index:50;pointer-events:auto;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.52);backdrop-filter:blur(14px);color:#fff;padding:9px 12px;border-radius:11px;font-size:9px;font-weight:900;letter-spacing:1px}
+.camera-logout:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.4)}
+.logout-icon{font-size:13px;margin-right:4px}
+.scan-box{position:absolute;width:min(72vw,350px);height:min(72vw,350px);left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,.34);border-radius:34px;box-shadow:0 0 0 9999px rgba(0,0,0,.26),0 0 80px rgba(255,255,255,.05)}
+.scan-box:before{content:"";position:absolute;left:8%;right:8%;height:2px;top:10%;background:linear-gradient(90deg,transparent,#fff,transparent);box-shadow:0 0 18px rgba(255,255,255,.75);animation:scanLine 2.4s ease-in-out infinite}
+.scan-corner{position:absolute;width:34px;height:34px;border-color:#fff;filter:drop-shadow(0 0 8px rgba(255,255,255,.4))}
+.c1{left:-2px;top:-2px;border-left:4px solid;border-top:4px solid;border-radius:16px 0 0 0}
+.c2{right:-2px;top:-2px;border-right:4px solid;border-top:4px solid;border-radius:0 16px 0 0}
+.c3{left:-2px;bottom:-2px;border-left:4px solid;border-bottom:4px solid;border-radius:0 0 0 16px}
+.c4{right:-2px;bottom:-2px;border-right:4px solid;border-bottom:4px solid;border-radius:0 0 16px 0}
+.scan-center-label{position:absolute;z-index:10;left:20px;right:20px;top:calc(50% + min(36vw,175px) + 28px);text-align:center}
+.scan-title{font-size:10px;font-weight:900;letter-spacing:2px}
+.scan-subtitle{font-size:10px;color:#85868e;margin-top:6px}
+.scan-status{position:absolute;z-index:10;left:20px;right:20px;bottom:max(28px,env(safe-area-inset-bottom));text-align:center}
+.status-pill{display:inline-block;padding:12px 17px;border-radius:999px;background:rgba(0,0,0,.64);border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(18px);font-size:11px;color:#d8d8dc;box-shadow:0 15px 40px rgba(0,0,0,.3)}
+.scan-status:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#8cffc1;box-shadow:0 0 12px #8cffc1;margin-right:7px}
+
+/* ---------- media ---------- */
+.media-overlay{position:fixed;inset:0;z-index:2000;background:rgba(2,2,4,.92);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;padding:20px}
+.media-card{width:100%;max-width:680px;background:linear-gradient(145deg,#17171c,#09090c);border:1px solid rgba(255,255,255,.13);border-radius:28px;padding:22px;box-shadow:0 40px 120px rgba(0,0,0,.65)}
+.media-card h2{font-size:22px;font-weight:900;margin-bottom:16px}
+.media-card video{width:100%;max-height:65vh;border-radius:17px;background:#000;border:1px solid rgba(255,255,255,.08)}
+.media-card audio{width:100%;margin:15px 0}
+
+/* ---------- motion ---------- */
+@keyframes scanLine{0%,100%{top:10%;opacity:.2}50%{top:88%;opacity:1}}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
+@media(max-width:850px){.admin-grid{grid-template-columns:1fr}.dashboard-hero{align-items:flex-start;flex-direction:column}.secure-badge{align-self:flex-start}}
+@media(max-width:600px){
+  .auth-page{padding:16px}
+  .auth-card{padding:28px 20px;border-radius:25px}
+  .logo{font-size:22px;letter-spacing:3px}
+  .brand-mark{width:40px;height:40px}
+  .feature-strip{gap:6px}
+  .feature-strip>div{padding:10px 7px}
+  .feature-strip span{font-size:7px}
+  .admin-container{padding:24px 13px 55px}
+  .panel{padding:17px}
+  .page-title{font-size:32px}
+  .header-inner{padding:0 14px}
+  .brand{font-size:12px}
+  .camera-header{padding-left:13px;padding-right:13px}
+  .camera-subtitle{font-size:6px}
+  .live-badge{display:none}
+  .scan-box{width:min(78vw,330px);height:min(78vw,330px)}
+  .scan-center-label{top:calc(50% + min(39vw,165px) + 25px)}
+  .scan-title{font-size:8px;letter-spacing:1.5px}
+}
+
+/* ==================================================
+   LUXURY PRODUCT UI OVERRIDE
+================================================== */
+:root{
+  --accent:#a78bfa;
+  --accent2:#22d3ee;
+  --accent3:#f472b6;
+  --ink:#f8fafc;
+  --muted:#94a3b8;
+  --panel:rgba(12,15,27,.72);
+}
+body{
+  background:
+    radial-gradient(circle at 15% 15%,rgba(124,58,237,.20),transparent 30%),
+    radial-gradient(circle at 85% 20%,rgba(6,182,212,.15),transparent 28%),
+    radial-gradient(circle at 50% 100%,rgba(236,72,153,.12),transparent 35%),
+    #03040a !important;
+  color:var(--ink);
+}
+.auth-page.landing-page{
+  min-height:100svh; overflow:hidden; position:relative;
+  background:linear-gradient(135deg,#03040a 0%,#070816 48%,#05030b 100%);
+}
+.landing-shell{
+  position:relative; z-index:2; width:min(940px,92vw); margin:auto;
+  min-height:100svh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:48px 0 28px; text-align:center;
+}
+.brand-kicker{font-size:11px;letter-spacing:.34em;color:#a5b4fc;font-weight:800;margin-bottom:20px}
+.brand-mark{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-weight:900;font-size:20px;
+  background:linear-gradient(135deg,#8b5cf6,#22d3ee);box-shadow:0 0 45px rgba(139,92,246,.35);margin-bottom:18px}
+.logo{font-size:clamp(36px,7vw,76px)!important;letter-spacing:.13em!important;font-weight:900!important;line-height:.95}
+.logo span{background:linear-gradient(90deg,#fff,#a78bfa 45%,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo-line{width:110px;height:2px;background:linear-gradient(90deg,transparent,#a78bfa,#22d3ee,transparent);margin:22px auto}
+.tagline{font-size:clamp(14px,2vw,18px)!important;color:#cbd5e1!important;letter-spacing:.02em;margin-bottom:30px}
+.experience-card{width:min(610px,100%);padding:25px;border:1px solid rgba(167,139,250,.25);border-radius:28px;background:linear-gradient(145deg,rgba(17,20,35,.84),rgba(7,9,18,.70));box-shadow:0 30px 90px rgba(0,0,0,.45),inset 0 1px rgba(255,255,255,.08);backdrop-filter:blur(20px);text-align:left}
+.experience-top{font-size:10px;letter-spacing:.22em;color:#67e8f9;font-weight:800}.live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#22d3ee;box-shadow:0 0 14px #22d3ee;margin-right:8px}
+.experience-title{font-size:clamp(25px,4vw,38px);font-weight:850;margin:12px 0 8px;letter-spacing:-.035em}.experience-sub{color:#94a3b8;font-size:14px;line-height:1.6;max-width:500px}
+.hero-user-btn{margin-top:22px;width:100%;border:0;border-radius:16px;padding:17px 19px;display:flex;align-items:center;justify-content:space-between;font-weight:900;letter-spacing:.08em;color:#050509;background:linear-gradient(100deg,#c4b5fd,#67e8f9 55%,#f9a8d4);box-shadow:0 12px 35px rgba(103,232,249,.16);cursor:pointer;transition:.25s}
+.hero-user-btn:hover{transform:translateY(-2px);box-shadow:0 18px 45px rgba(167,139,250,.25)}.hero-user-btn b{font-size:22px}
+.feature-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;width:min(610px,100%);margin-top:18px;border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;background:rgba(255,255,255,.05)}
+.feature-row div{padding:15px 12px;background:rgba(8,10,19,.72);display:flex;flex-direction:column;gap:5px;text-align:left}.feature-row b{font-size:10px;color:#818cf8;letter-spacing:.16em}.feature-row span{font-size:10px;color:#cbd5e1;letter-spacing:.12em;font-weight:800}
+.admin-access{margin-top:25px;background:none;border:0;color:#c4b5fd;font-weight:800;letter-spacing:.13em;font-size:11px;cursor:pointer;padding:9px 14px;border-bottom:1px solid rgba(167,139,250,.3)}.admin-access i{font-style:normal;margin-left:8px}.admin-note{font-size:9px;letter-spacing:.14em;color:#475569;text-transform:uppercase;margin-top:2px}
+.landing-glow{position:absolute;filter:blur(70px);border-radius:50%;pointer-events:none}.glow-a{width:280px;height:280px;background:rgba(124,58,237,.18);left:-90px;top:18%}.glow-b{width:260px;height:260px;background:rgba(34,211,238,.13);right:-80px;bottom:12%}
+.auth-card,.panel{background:linear-gradient(145deg,rgba(15,18,32,.82),rgba(6,8,16,.76))!important;border:1px solid rgba(167,139,250,.18)!important;box-shadow:0 28px 90px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.06)!important;backdrop-filter:blur(22px)}
+.primary-btn{background:linear-gradient(100deg,#8b5cf6,#06b6d4)!important;border:0!important;box-shadow:0 12px 30px rgba(124,58,237,.22)!important}.choice-btn{background:linear-gradient(100deg,#8b5cf6,#06b6d4)!important;color:#fff!important;border:0!important}.choice-btn + .choice-btn{background:rgba(255,255,255,.06)!important;border:1px solid rgba(167,139,250,.22)!important}
+.input:focus{border-color:#8b5cf6!important;box-shadow:0 0 0 4px rgba(139,92,246,.12)!important}.admin-header,.camera-header{background:rgba(3,4,10,.72)!important;border-bottom:1px solid rgba(167,139,250,.15)!important;backdrop-filter:blur(18px)}
+.tattoo-card{border-color:rgba(167,139,250,.16)!important;background:linear-gradient(145deg,rgba(17,20,35,.78),rgba(7,9,17,.8))!important}.logout-btn,.camera-logout{border-color:rgba(248,113,113,.35)!important;color:#fda4af!important}
+@media(max-width:600px){.landing-shell{padding:32px 0 20px}.brand-mark{width:50px;height:50px}.experience-card{padding:20px;border-radius:23px}.feature-row div{padding:12px 8px}.feature-row span{font-size:8px}.tagline{margin-bottom:22px!important}}
+
+/* Splash screen removed: scanner opens directly. */
+</style>
+</head>
+
+<body>
+
+<!-- ==================================================
+     USER LOGIN
+================================================== -->
+
+<section id="userLoginPage" class="auth-page hidden">
+
+  <div class="auth-card premium-auth compact-auth">
+
+    <div class="eyebrow">
+      <span class="eyebrow-dot"></span>
+      USER ACCESS
+    </div>
+
+    <div class="mini-brand">LIVING <span>TATTOO</span></div>
+
+    <div class="form-title">
+      Start your experience
+    </div>
+
+    <div class="form-subtitle">
+      Enter your name to start scanning.
+    </div>
+
+    <label class="input-label">
+      Your Name
+    </label>
+
+    <input
+      id="userName"
+      class="input"
+      type="text"
+      maxlength="60"
+      placeholder="Enter your name"
+      autocomplete="name"
+    >
+
+    <button
+      class="primary-btn"
+      onclick="loginUser()">
+      CONTINUE
+    </button>
+
+    <div
+      id="userError"
+      class="error hidden">
+    </div>
+
+    <button
+      class="back-btn"
+      onclick="goHome()">
+      BACK
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- ==================================================
+     ADMIN LOGIN
+================================================== -->
+
+<section id="adminLoginPage" class="auth-page hidden">
+
+  <div class="auth-card premium-auth compact-auth">
+
+    <div class="eyebrow">
+      <span class="eyebrow-dot"></span>
+      PRIVATE MANAGEMENT
+    </div>
+
+    <div class="mini-brand">LIVING <span>TATTOO</span></div>
+
+    <div class="form-title">
+      Admin Login
+    </div>
+
+    <div class="form-subtitle">
+      Sign in to manage Living Tattoo.
+    </div>
+
+    <label class="input-label">
+      Gmail
+    </label>
+
+    <input
+      id="adminEmail"
+      class="input"
+      type="email"
+      placeholder="admin@gmail.com"
+      autocomplete="username"
+    >
+
+    <label class="input-label">
+      Password
+    </label>
+
+    <input
+      id="adminPassword"
+      class="input"
+      type="password"
+      placeholder="Enter password"
+      autocomplete="current-password"
+    >
+
+    <button
+      class="primary-btn"
+      onclick="loginAdmin()">
+      LOGIN
+    </button>
+
+    <div
+      id="adminError"
+      class="error hidden">
+    </div>
+
+    <button
+      class="back-btn"
+      onclick="goHome()">
+      BACK
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- ==================================================
+     ADMIN APP
+================================================== -->
+
+<section id="adminApp" class="hidden">
+
+  <header class="admin-header premium-admin-header">
+
+    <div class="header-inner">
+
+      <div class="brand">
+        LIVING TATTOO
+      </div>
+
+      <div class="header-right">
+
+        <button
+          class="logout-btn"
+          onclick="logoutAdmin()">
+          Logout
+        </button>
+
+      </div>
+
+    </div>
+
+  </header>
+
+  <main class="admin-container">
+
+    <section class="dashboard-hero">
+      <div>
+        <div class="eyebrow"><span class="eyebrow-dot"></span> MANAGEMENT CONSOLE</div>
+        <h1 class="page-title">Admin Dashboard</h1>
+        <p class="page-subtitle">Manage your tattoo library, visual references and connected media from one secure workspace.</p>
+      </div>
+      <div class="secure-badge">
+        <span class="secure-dot"></span>
+        SYSTEM ONLINE
+      </div>
+    </section>
+
+    <div class="dashboard-divider"></div>
+
+    <div class="admin-grid">
+
+      <!-- ADD -->
+      <div class="panel">
+
+        <div class="panel-title">
+          Add Tattoo
+        </div>
+
+        <label class="input-label">
+          Tattoo Name
+        </label>
+
+        <input
+          id="tattooName"
+          class="input"
+          placeholder="Tattoo name"
+        >
+
+        <label class="input-label">
+          Shop Name
+        </label>
+
+        <input
+          id="shopName"
+          class="input"
+          placeholder="Shop name"
+        >
+
+        <label class="input-label">
+          Number
+        </label>
+
+        <input
+          id="phoneNumber"
+          class="input"
+          placeholder="Contact number"
+        >
+
+        <label class="input-label">
+          Tattoo Image
+        </label>
+
+        <input
+          id="referenceImages"
+          class="file-input"
+          type="file"
+          accept="image/*"
+        >
+
+        <div
+          id="filePreview"
+          class="file-list">
+        </div>
+
+        <label class="input-label">
+          Audio
+        </label>
+
+        <input
+          id="audioFile"
+          class="file-input"
+          type="file"
+          accept="audio/*"
+        >
+        <div id="audioPreview" class="file-list"></div>
+
+        <label class="input-label">
+          Video
+        </label>
+
+        <input
+          id="videoFile"
+          class="file-input"
+          type="file"
+          accept="video/*"
+        >
+        <div id="videoPreview" class="file-list"></div>
+
+        <button
+          class="primary-btn"
+          onclick="addTattoo()">
+          ADD TATTOO
+        </button>
+
+        <div
+          id="saveStatus"
+          class="status">
+        </div>
+
+      </div>
+
+
+      <!-- LIST -->
+      <div class="panel">
+
+        <div class="panel-title">
+          Tattoo Library
+        </div>
+
+        <input
+          id="searchInput"
+          class="input search"
+          placeholder="Search tattoo..."
+          oninput="renderTattoos()"
+        >
+
+        <div
+          id="tattooGrid"
+          class="tattoo-grid">
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+</section>
+
+
+<!-- ==================================================
+     CAMERA
+================================================== -->
+
+<section
+  id="cameraScreen"
+  class="hidden">
+
+  <video
+    id="camera"
+    autoplay
+    muted
+    playsinline>
+  </video>
+
+  <div class="camera-dark"></div>
+
+  <div class="camera-header">
+
+    <div class="camera-brand-block">
+      <div class="camera-mark">LT</div>
+      <div>
+        <div class="camera-logo">LIVING TATTOO</div>
+        <div class="camera-subtitle">LIVE RECOGNITION</div>
+      </div>
+    </div>
+
+    <div class="camera-actions">
+      <div class="live-badge"><span></span> LIVE</div>
+      <button
+        type="button"
+        class="camera-admin"
+        onclick="openAdminAccess()"
+        aria-label="Admin Access">
+        ADMIN
+      </button>
+      <button
+        type="button"
+        class="camera-logout"
+        onclick="logoutUser()"
+        aria-label="Logout">
+        <span class="logout-icon">↪</span>
+        LOGOUT
+      </button>
+    </div>
+
+  </div>
+
+  <div class="scan-box">
+
+    <span class="scan-corner c1"></span>
+    <span class="scan-corner c2"></span>
+    <span class="scan-corner c3"></span>
+    <span class="scan-corner c4"></span>
+
+  </div>
+
+  <div class="scan-center-label">
+    <div class="scan-title">ALIGN TATTOO INSIDE FRAME</div>
+    <div class="scan-subtitle">Hold steady for visual recognition</div>
+  </div>
+
+  <div class="scan-status">
+
+    <div class="status-pill">
+      <span id="scanStatus">
+        Preparing camera...
+      </span>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ==================================================
+     MEDIA
+================================================== -->
+
+<section
+  id="mediaOverlay"
+  class="media-overlay hidden">
+
+  <div class="media-card">
+
+    <h2 id="mediaTitle">
+      Tattoo
+    </h2>
+
+    <div id="videoContainer"></div>
+
+    <div id="audioContainer"></div>
+
+    <button
+      class="primary-btn"
+      onclick="closeMedia()">
+      CONTINUE SCANNING
+    </button>
+
+  </div>
+
+</section>
+
+
+<script>
+
+/* =====================================================
+   SUPABASE CONFIG
+===================================================== */
+
+const SUPABASE_URL =
+  "https://kpxineqmovdnllrkioxa.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_xx0cdvAIL210GOjOR6k_-g_Y0wglxYA";
+
+let supabaseClient = null;
+
+// Supabase is optional for the initial customer experience.
+// The scanner must never get stuck if the CDN/network is unavailable.
+if(window.supabase && typeof window.supabase.createClient === "function"){
+  supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY,
+    {
+      auth:{
+        persistSession:true,
+        autoRefreshToken:true,
+        detectSessionInUrl:true
+      }
+    }
+  );
+}
+
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let cameraStream = null;
+let recognitionTimer = null;
+let recognitionBusy = false;
+
+let recognitionModel = null;
+
+let tattoos = [];
+
+let referenceEmbeddings = new Map();
+
+
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+function hidePages(){
+
+  const cameraScreen = document.getElementById("cameraScreen");
+  if(cameraScreen) cameraScreen.classList.add("hidden");
+
+  const mediaOverlay = document.getElementById("mediaOverlay");
+  if(mediaOverlay) mediaOverlay.classList.add("hidden");
+
+  document
+    .getElementById("userLoginPage")
+    .classList.add("hidden");
+
+  document
+    .getElementById("adminLoginPage")
+    .classList.add("hidden");
+
+  document
+    .getElementById("adminApp")
+    .classList.add("hidden");
+}
+
+
+async function ensureAnonymousSession(){
+
+  if(!supabaseClient) return false;
+
+  try{
+    const result = await supabaseClient.auth.getSession();
+    const session = result.data.session;
+
+    if(session && session.user && session.user.is_anonymous){
+      return true;
+    }
+
+    if(session){
+      await supabaseClient.auth.signOut();
+    }
+
+    const anon = await supabaseClient.auth.signInAnonymously();
+
+    if(anon.error){
+      console.error(anon.error);
+      return false;
+    }
+
+    return true;
+  }catch(error){
+    console.error("Anonymous session error:",error);
+    return false;
+  }
+}
+
+async function goHome(){
+
+  stopCamera();
+  hidePages();
+
+  // Customer experience: open the scanner immediately.
+  // Authentication continues in the background and never blocks the UI.
+  ensureAnonymousSession().catch(err => console.warn("Background auth:", err));
+  openScanner();
+}
+
+
+function showUserLogin(){
+
+  hidePages();
+
+  document
+    .getElementById("userLoginPage")
+    .classList
+    .remove("hidden");
+
+  const saved =
+    localStorage.getItem(
+      "living_tattoo_user"
+    );
+
+  if(saved){
+
+    document
+      .getElementById("userName")
+      .value = saved;
+  }
+}
+
+
+function showAdminLogin(){
+
+  hidePages();
+
+  document
+    .getElementById("adminLoginPage")
+    .classList
+    .remove("hidden");
+}
+
+
+/* =====================================================
+   ERROR
+===================================================== */
+
+function showError(id,message){
+
+  const box =
+    document.getElementById(id);
+
+  box.textContent = message;
+
+  box.classList.remove("hidden");
+}
+
+
+function hideError(id){
+
+  document
+    .getElementById(id)
+    .classList
+    .add("hidden");
+}
+
+
+/* =====================================================
+   USER LOGIN
+===================================================== */
+
+async function loginUser(){
+
+  hideError("userError");
+
+  const name =
+    document
+      .getElementById("userName")
+      .value
+      .trim();
+
+  if(!name){
+
+    showError(
+      "userError",
+      "Please enter your name."
+    );
+
+    return;
+  }
+
+  try{
+
+    /*
+      IMPORTANT:
+      User does not enter email/password.
+
+      Supabase Anonymous Auth creates
+      a secure authenticated session.
+    */
+
+    const result =
+      await supabaseClient.auth
+        .signInAnonymously({
+          options:{
+            data:{
+              display_name:name
+            }
+          }
+        });
+
+    if(result.error){
+
+      console.error(
+        result.error
+      );
+
+      showError(
+        "userError",
+        result.error.message
+      );
+
+      return;
+    }
+
+    if(!result.data.session){
+
+      showError(
+        "userError",
+        "User session could not be created."
+      );
+
+      return;
+    }
+
+    /*
+      Save name until user presses Logout.
+    */
+
+    localStorage.setItem(
+      "living_tattoo_user",
+      name
+    );
+
+    await openScanner();
+
+  }catch(error){
+
+    console.error(error);
+
+    showError(
+      "userError",
+      "Login failed. Please try again."
+    );
+  }
+}
+
+
+/* =====================================================
+   USER LOGOUT
+===================================================== */
+
+function openAdminAccess(){
+  stopCamera();
+  window.location.hash = "admin";
+  showAdminLogin();
+}
+
+async function logoutUser(){
+
+  stopCamera();
+
+  try{
+    await supabaseClient.auth.signOut();
+  }catch(e){
+    console.error(e);
+  }
+
+  localStorage.removeItem(
+    "living_tattoo_user"
+  );
+
+  referenceEmbeddings.clear();
+
+  goHome();
+}
+
+
+/* =====================================================
+   ADMIN LOGIN
+===================================================== */
+
+async function loginAdmin(){
+
+  hideError("adminError");
+
+  const email =
+    document
+      .getElementById("adminEmail")
+      .value
+      .trim();
+
+  const password =
+    document
+      .getElementById("adminPassword")
+      .value;
+
+  if(!email){
+
+    showError(
+      "adminError",
+      "Enter Gmail."
+    );
+
+    return;
+  }
+
+  if(!password){
+
+    showError(
+      "adminError",
+      "Enter password."
+    );
+
+    return;
+  }
+
+  try{
+
+    const result =
+      await supabaseClient.auth
+        .signInWithPassword({
+          email,
+          password
+        });
+
+    if(result.error){
+
+      showError(
+        "adminError",
+        "Invalid Gmail or password."
+      );
+
+      return;
+    }
+
+    const user =
+      result.data.user;
+
+    if(!user){
+
+      showError(
+        "adminError",
+        "Login failed."
+      );
+
+      return;
+    }
+
+    /*
+      Verify role from database.
+    */
+
+    const profileResult =
+      await supabaseClient
+        .from("profiles")
+        .select("id,role,display_name")
+        .eq("id",user.id)
+        .single();
+
+    if(
+      profileResult.error ||
+      !profileResult.data ||
+      profileResult.data.role !== "admin"
+    ){
+
+      await supabaseClient.auth.signOut();
+
+      showError(
+        "adminError",
+        "This account is not an admin."
+      );
+
+      return;
+    }
+
+    hidePages();
+
+    document
+      .getElementById("adminApp")
+      .classList
+      .remove("hidden");
+
+    await loadTattoos();
+
+  }catch(error){
+
+    console.error(error);
+
+    showError(
+      "adminError",
+      "Unable to login."
+    );
+  }
+}
+
+
+/* =====================================================
+   ADMIN LOGOUT
+===================================================== */
+
+async function logoutAdmin(){
+
+  await supabaseClient.auth.signOut();
+
+  tattoos = [];
+
+  referenceEmbeddings.clear();
+
+  goHome();
+}
+
+
+/* =====================================================
+   SESSION CHECK
+===================================================== */
+
+async function checkSession(){
+
+  const isAdminRoute = window.location.hash.toLowerCase() === "#admin";
+
+  if(isAdminRoute){
+    showAdminLogin();
+    return;
+  }
+
+  // Open the scanner immediately. No splash and no network wait.
+  ensureAnonymousSession().catch(err => console.warn("Background auth:", err));
+  openScanner();
+}
+
+/* =====================================================
+   CAMERA
+===================================================== */
+
+async function openScanner(){
+
+  hidePages();
+
+  const cameraScreen =
+    document.getElementById(
+      "cameraScreen"
+    );
+
+  cameraScreen.classList.remove(
+    "hidden"
+  );
+
+  setScanStatus(
+    "Requesting camera..."
+  );
+
+  try{
+
+    if(
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ){
+
+      throw new Error(
+        "Camera is not supported by this browser."
+      );
+    }
+
+    cameraStream =
+      await navigator.mediaDevices
+        .getUserMedia({
+          video:{
+            facingMode:{
+              ideal:"environment"
+            },
+            width:{
+              ideal:1280
+            },
+            height:{
+              ideal:720
+            }
+          },
+          audio:false
+        });
+
+    const camera =
+      document.getElementById(
+        "camera"
+      );
+
+    camera.srcObject =
+      cameraStream;
+
+    await camera.play();
+
+    setScanStatus(
+      "Loading recognition..."
+    );
+
+    await loadModel();
+
+    setScanStatus(
+      "Loading tattoo references..."
+    );
+
+    await loadTattoosForScanner();
+
+    setScanStatus(
+      "Point the camera at a tattoo"
+    );
+
+    startRecognition();
+
+  }catch(error){
+
+    console.error(error);
+
+    setScanStatus(
+      "Camera could not start"
+    );
+
+    alert(
+      error.message ||
+      "Please allow camera permission."
+    );
+  }
+}
+
+
+function stopCamera(){
+
+  if(recognitionTimer){
+
+    clearInterval(
+      recognitionTimer
+    );
+
+    recognitionTimer = null;
+  }
+
+  if(cameraStream){
+
+    cameraStream
+      .getTracks()
+      .forEach(
+        track => track.stop()
+      );
+
+    cameraStream = null;
+  }
+
+  recognitionBusy = false;
+}
+
+
+function setScanStatus(message){
+
+  document
+    .getElementById("scanStatus")
+    .textContent = message;
+}
+
+
+/* =====================================================
+   MODEL
+===================================================== */
+
+async function loadModel(){
+
+  if(recognitionModel){
+    return;
+  }
+
+  recognitionModel =
+    await mobilenet.load({
+      version:2,
+      alpha:1.0
+    });
+}
+
+
+async function createEmbedding(source){
+
+  if(!recognitionModel){
+
+    await loadModel();
+  }
+
+  const tensor =
+    recognitionModel.infer(
+      source,
+      true
+    );
+
+  const values =
+    await tensor.data();
+
+  tensor.dispose();
+
+  return Array.from(values);
+}
+
+
+function cosineSimilarity(a,b){
+
+  let dot=0;
+  let aa=0;
+  let bb=0;
+
+  const n =
+    Math.min(
+      a.length,
+      b.length
+    );
+
+  for(let i=0;i<n;i++){
+
+    dot += a[i]*b[i];
+    aa += a[i]*a[i];
+    bb += b[i]*b[i];
+  }
+
+  if(
+    aa === 0 ||
+    bb === 0
+  ){
+    return 0;
+  }
+
+  return dot /
+    (
+      Math.sqrt(aa) *
+      Math.sqrt(bb)
+    );
+}
+
+
+/* =====================================================
+   LOAD TATTOOS
+===================================================== */
+
+async function loadTattoos(){
+
+  const result =
+    await supabaseClient
+      .from("tattoos")
+      .select(`
+        id,
+        tattoo_name,
+        shop_name,
+        phone_number,
+        audio_path,
+        video_path,
+        created_at,
+        tattoo_references(
+          id,
+          image_path,
+          angle_label
+        )
+      `)
+      .order(
+        "created_at",
+        {ascending:false}
+      );
+
+  if(result.error){
+
+    console.error(
+      result.error
+    );
+
+    document
+      .getElementById("tattooGrid")
+      .innerHTML =
+      `<div class="status">
+        Unable to load tattoos.
+       </div>`;
+
+    return;
+  }
+
+  tattoos =
+    result.data || [];
+
+  renderTattoos();
+}
+
+
+/* =====================================================
+   LOAD TATTOOS FOR SCANNER
+===================================================== */
+
+async function loadTattoosForScanner(){
+
+  const result =
+    await supabaseClient
+      .from("tattoos")
+      .select(`
+        id,
+        tattoo_name,
+        shop_name,
+        phone_number,
+        audio_path,
+        video_path,
+        tattoo_references(
+          id,
+          image_path,
+          angle_label
+        )
+      `);
+
+  if(result.error){
+
+    throw result.error;
+  }
+
+  tattoos =
+    result.data || [];
+
+  referenceEmbeddings.clear();
+
+  /*
+    Prepare actual image embeddings.
+  */
+
+  for(
+    const tattoo of tattoos
+  ){
+
+    const refs =
+      tattoo.tattoo_references || [];
+
+    if(
+      refs.length < 1
+    ){
+      continue;
+    }
+
+    const embeddings=[];
+
+    for(
+      const ref of refs
+    ){
+
+      try{
+
+        const signed =
+          await supabaseClient.storage
+            .from("tattoo-images")
+            .createSignedUrl(
+              ref.image_path,
+              3600
+            );
+
+        if(
+          signed.error ||
+          !signed.data?.signedUrl
+        ){
+          continue;
+        }
+
+        const image =
+          await loadImage(
+            signed.data.signedUrl
+          );
+
+        const embedding =
+          await createEmbedding(
+            image
+          );
+
+        embeddings.push({
+          embedding
+        });
+
+      }catch(error){
+
+        console.error(
+          "Reference error:",
+          error
+        );
+      }
+    }
+
+    if(embeddings.length){
+
+      referenceEmbeddings.set(
+        tattoo.id,
+        embeddings
+      );
+    }
+  }
+}
+
+
+function loadImage(url){
+
+  return new Promise(
+    (resolve,reject)=>{
+
+      const image =
+        new Image();
+
+      image.crossOrigin =
+        "anonymous";
+
+      image.onload =
+        () => resolve(image);
+
+      image.onerror =
+        () => reject(
+          new Error(
+            "Image could not load"
+          )
+        );
+
+      image.src = url;
+    }
+  );
+}
+
+
+/* =====================================================
+   RECOGNITION
+===================================================== */
+
+function startRecognition(){
+
+  if(recognitionTimer){
+
+    clearInterval(
+      recognitionTimer
+    );
+  }
+
+  recognitionTimer =
+    setInterval(
+      recognizeFrame,
+      1800
+    );
+}
+
+
+async function recognizeFrame(){
+
+  if(recognitionBusy){
+    return;
+  }
+
+  if(!recognitionModel){
+    return;
+  }
+
+  const camera =
+    document.getElementById(
+      "camera"
+    );
+
+  if(
+    !camera.videoWidth ||
+    !camera.videoHeight
+  ){
+    return;
+  }
+
+  if(!referenceEmbeddings.size){
+
+    setScanStatus(
+      "No tattoo references available"
+    );
+
+    return;
+  }
+
+  recognitionBusy=true;
+
+  try{
+
+    setScanStatus(
+      "Analyzing..."
+    );
+
+    /*
+      Center crop.
+      No image is uploaded to the server.
+    */
+
+    const canvas =
+      document.createElement(
+        "canvas"
+      );
+
+    canvas.width=224;
+    canvas.height=224;
+
+    const size =
+      Math.min(
+        camera.videoWidth,
+        camera.videoHeight
+      );
+
+    const sx =
+      (camera.videoWidth-size)/2;
+
+    const sy =
+      (camera.videoHeight-size)/2;
+
+    const ctx =
+      canvas.getContext("2d");
+
+    ctx.drawImage(
+      camera,
+      sx,
+      sy,
+      size,
+      size,
+      0,
+      0,
+      224,
+      224
+    );
+
+    const current =
+      await createEmbedding(
+        canvas
+      );
+
+    let best=null;
+    let second=null;
+
+    for(
+      const tattoo of tattoos
+    ){
+
+      const refs =
+        referenceEmbeddings.get(
+          tattoo.id
+        );
+
+      if(!refs){
+        continue;
+      }
+
+      let score=0;
+
+      for(
+        const ref of refs
+      ){
+
+        const similarity =
+          cosineSimilarity(
+            current,
+            ref.embedding
+          );
+
+        if(
+          similarity > score
+        ){
+          score=similarity;
+        }
+      }
+
+      const result={
+        tattoo,
+        score
+      };
+
+      if(
+        !best ||
+        score > best.score
+      ){
+
+        second=best;
+        best=result;
+
+      }else if(
+        !second ||
+        score > second.score
+      ){
+
+        second=result;
+      }
+    }
+
+    /*
+      Conservative threshold.
+    */
+
+    const threshold=0.72;
+    const margin=0.035;
+
+    if(
+      best &&
+      best.score >= threshold &&
+      (
+        !second ||
+        best.score-second.score >= margin
+      )
+    ){
+
+      setScanStatus(
+        "Tattoo recognized"
+      );
+
+      if(recognitionTimer){
+
+        clearInterval(
+          recognitionTimer
+        );
+
+        recognitionTimer=null;
+      }
+
+      await playTattooMedia(
+        best.tattoo
+      );
+
+    }else{
+
+      setScanStatus(
+        "Tattoo not recognized"
+      );
+    }
+
+  }catch(error){
+
+    console.error(
+      "Recognition:",
+      error
+    );
+
+    setScanStatus(
+      "Recognition error"
+    );
+
+  }finally{
+
+    recognitionBusy=false;
+  }
+}
+
+
+/* =====================================================
+   MEDIA
+===================================================== */
+
+async function playTattooMedia(tattoo){
+
+  document
+    .getElementById("mediaTitle")
+    .textContent =
+      tattoo.tattoo_name;
+
+  const videoContainer =
+    document.getElementById(
+      "videoContainer"
+    );
+
+  const audioContainer =
+    document.getElementById(
+      "audioContainer"
+    );
+
+  videoContainer.innerHTML="";
+  audioContainer.innerHTML="";
+
+  let mediaFound=false;
+
+
+  if(tattoo.video_path){
+
+    const result =
+      await supabaseClient.storage
+        .from("tattoo-video")
+        .createSignedUrl(
+          tattoo.video_path,
+          3600
+        );
+
+    if(
+      !result.error &&
+      result.data?.signedUrl
+    ){
+
+      const video =
+        document.createElement(
+          "video"
+        );
+
+      video.src =
+        result.data.signedUrl;
+
+      video.controls=true;
+      video.autoplay=true;
+      video.playsInline=true;
+
+      videoContainer.appendChild(
+        video
+      );
+
+      mediaFound=true;
+
+      video.play().catch(
+        () => {
+          // Browser autoplay restriction.
+        }
+      );
+    }
+  }
+
+
+  if(tattoo.audio_path){
+
+    const result =
+      await supabaseClient.storage
+        .from("tattoo-audio")
+        .createSignedUrl(
+          tattoo.audio_path,
+          3600
+        );
+
+    if(
+      !result.error &&
+      result.data?.signedUrl
+    ){
+
+      const audio =
+        document.createElement(
+          "audio"
+        );
+
+      audio.src =
+        result.data.signedUrl;
+
+      audio.controls=true;
+      audio.autoplay=true;
+
+      audioContainer.appendChild(
+        audio
+      );
+
+      mediaFound=true;
+
+      audio.play().catch(
+        () => {
+          // Browser autoplay restriction.
+        }
+      );
+    }
+  }
+
+
+  if(!mediaFound){
+
+    audioContainer.innerHTML =
+      `<p class="status">
+        No media attached to this tattoo.
+       </p>`;
+  }
+
+  document
+    .getElementById(
+      "mediaOverlay"
+    )
+    .classList
+    .remove("hidden");
+}
+
+
+function closeMedia(){
+
+  const video =
+    document.querySelector(
+      "#videoContainer video"
+    );
+
+  const audio =
+    document.querySelector(
+      "#audioContainer audio"
+    );
+
+  if(video){
+
+    video.pause();
+    video.src="";
+  }
+
+  if(audio){
+
+    audio.pause();
+    audio.src="";
+  }
+
+  document
+    .getElementById(
+      "mediaOverlay"
+    )
+    .classList
+    .add("hidden");
+
+  setScanStatus(
+    "Point the camera at a tattoo"
+  );
+
+  startRecognition();
+}
+
+
+/* =====================================================
+   ADMIN ADD TATTOO
+===================================================== */
+
+async function addTattoo(){
+
+  const name =
+    document
+      .getElementById("tattooName")
+      .value
+      .trim();
+
+  const shop =
+    document
+      .getElementById("shopName")
+      .value
+      .trim();
+
+  const number =
+    document
+      .getElementById("phoneNumber")
+      .value
+      .trim();
+
+  const images =
+    Array.from(
+      document
+        .getElementById(
+          "referenceImages"
+        )
+        .files
+    );
+
+  const audio =
+    document
+      .getElementById("audioFile")
+      .files[0];
+
+  const video =
+    document
+      .getElementById("videoFile")
+      .files[0];
+
+  const status =
+    document.getElementById(
+      "saveStatus"
+    );
+
+
+  if(!name){
+
+    status.textContent =
+      "Tattoo name is required.";
+
+    return;
+  }
+
+  if(images.length !== 1){
+
+    status.textContent =
+      "Select exactly 1 tattoo image.";
+
+    return;
+  }
+
+  try{
+
+    status.textContent =
+      "Creating tattoo...";
+
+
+    const userResult =
+      await supabaseClient.auth
+        .getUser();
+
+    if(
+      userResult.error ||
+      !userResult.data.user
+    ){
+
+      throw new Error(
+        "Admin session expired."
+      );
+    }
+
+    const user =
+      userResult.data.user;
+
+
+    /*
+      Confirm admin role.
+    */
+
+    const profile =
+      await supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("id",user.id)
+        .single();
+
+    if(
+      profile.error ||
+      profile.data?.role !== "admin"
+    ){
+
+      throw new Error(
+        "Admin permission required."
+      );
+    }
+
+
+    /*
+      The tattoos table has a CHECK constraint named
+      tattoo_has_media. It requires audio_path or video_path
+      to be present when the row is inserted.
+
+      Generate the tattoo id first, upload media, then create
+      the database row with the final media paths already set.
+    */
+
+    if(!audio && !video){
+
+      throw new Error(
+        "Please select at least Audio or Video."
+      );
+    }
+
+    const tattooId =
+      crypto.randomUUID();
+
+    let imagePath = null;
+    let audioPath = null;
+    let videoPath = null;
+
+    const uploadedImagePaths = [];
+
+    try{
+
+      /*
+        Upload the single reference image first.
+      */
+
+      status.textContent =
+        "Uploading tattoo image...";
+
+      const imageFile = images[0];
+      const imageExtension =
+        getExtension(imageFile.name);
+
+      imagePath =
+        `${tattooId}/${crypto.randomUUID()}.${imageExtension}`;
+
+      const imageUpload =
+        await supabaseClient.storage
+          .from("tattoo-images")
+          .upload(
+            imagePath,
+            imageFile,
+            {
+              upsert:false,
+              contentType:imageFile.type
+            }
+          );
+
+      if(imageUpload.error){
+        throw imageUpload.error;
+      }
+
+      uploadedImagePaths.push(imagePath);
+
+
+      /*
+        Upload audio if selected.
+      */
+
+      if(audio){
+
+        status.textContent =
+          "Uploading audio...";
+
+        audioPath =
+          `${tattooId}/${crypto.randomUUID()}.${getExtension(audio.name)}`;
+
+        const audioUpload =
+          await supabaseClient.storage
+            .from("tattoo-audio")
+            .upload(
+              audioPath,
+              audio,
+              {
+                upsert:false,
+                contentType:audio.type
+              }
+            );
+
+        if(audioUpload.error){
+          throw audioUpload.error;
+        }
+      }
+
+
+      /*
+        Upload video if selected.
+      */
+
+      if(video){
+
+        status.textContent =
+          "Uploading video...";
+
+        videoPath =
+          `${tattooId}/${crypto.randomUUID()}.${getExtension(video.name)}`;
+
+        const videoUpload =
+          await supabaseClient.storage
+            .from("tattoo-video")
+            .upload(
+              videoPath,
+              video,
+              {
+                upsert:false,
+                contentType:video.type
+              }
+            );
+
+        if(videoUpload.error){
+          throw videoUpload.error;
+        }
+      }
+
+
+      /*
+        Create the tattoo row only after media paths are ready.
+        This satisfies the tattoo_has_media CHECK constraint.
+      */
+
+      status.textContent =
+        "Creating tattoo...";
+
+      const inserted =
+        await supabaseClient
+          .from("tattoos")
+          .insert({
+            id:tattooId,
+            tattoo_name:name,
+            shop_name:shop || null,
+            phone_number:number || null,
+            audio_path:audioPath,
+            video_path:videoPath,
+            created_by:user.id
+          })
+          .select()
+          .single();
+
+      if(inserted.error){
+        throw inserted.error;
+      }
+
+      const tattoo =
+        inserted.data;
+
+
+      /*
+        Save the single tattoo/reference image.
+      */
+
+      status.textContent =
+        "Saving tattoo reference...";
+
+      const reference =
+        await supabaseClient
+          .from("tattoo_references")
+          .insert({
+            tattoo_id:tattoo.id,
+            image_path:imagePath,
+            angle_label:"reference-1"
+          });
+
+      if(reference.error){
+        throw reference.error;
+      }
+
+    }catch(uploadOrInsertError){
+
+      /*
+        Best-effort cleanup for the image if a later step fails.
+      */
+      if(uploadedImagePaths.length){
+
+        await supabaseClient.storage
+          .from("tattoo-images")
+          .remove(uploadedImagePaths)
+          .catch(()=>{});
+      }
+
+      /*
+        If the database row was created and a later step failed,
+        remove it so the admin does not get a half-created tattoo.
+      */
+      await supabaseClient
+        .from("tattoos")
+        .delete()
+        .eq("id",tattooId);
+
+      throw uploadOrInsertError;
+    }
+
+    status.textContent =
+      "Tattoo added successfully.";
+
+    clearTattooForm();
+
+    await loadTattoos();
+
+  }catch(error){
+
+    console.error(error);
+
+    status.textContent =
+      error.message ||
+      "Unable to add tattoo.";
+  }
+}
+
+
+/* =====================================================
+   FILE PREVIEW
+===================================================== */
+
+document
+  .getElementById(
+    "referenceImages"
+  )
+  .addEventListener(
+    "change",
+    function(){
+      renderSelectedImages();
+    }
+  );
+
+document
+  .getElementById(
+    "audioFile"
+  )
+  .addEventListener(
+    "change",
+    function(){
+      renderSingleMediaPreview(
+        "audioFile",
+        "audioPreview",
+        "AUDIO"
+      );
+    }
+  );
+
+document
+  .getElementById(
+    "videoFile"
+  )
+  .addEventListener(
+    "change",
+    function(){
+      renderSingleMediaPreview(
+        "videoFile",
+        "videoPreview",
+        "VIDEO"
+      );
+    }
+  );
+
+function renderSelectedImages(){
+
+  const input =
+    document.getElementById(
+      "referenceImages"
+    );
+
+  const box =
+    document.getElementById(
+      "filePreview"
+    );
+
+  box.innerHTML = "";
+
+  Array.from(input.files).forEach(
+    (file,index)=>{
+
+      const row =
+        document.createElement("div");
+
+      row.className = "file-chip";
+
+      row.innerHTML = `
+        <span class="file-chip-name">
+          ${index+1}. ${escapeHTML(file.name)}
+        </span>
+        <button
+          type="button"
+          class="file-chip-remove"
+          onclick="removeReferenceImage(${index})">
+          REMOVE
+        </button>
+      `;
+
+      box.appendChild(row);
+    }
+  );
+}
+
+function removeReferenceImage(index){
+
+  const input =
+    document.getElementById(
+      "referenceImages"
+    );
+
+  const files =
+    Array.from(input.files);
+
+  files.splice(index,1);
+
+  const transfer =
+    new DataTransfer();
+
+  files.forEach(file=>
+    transfer.items.add(file)
+  );
+
+  input.files = transfer.files;
+
+  renderSelectedImages();
+}
+
+function renderSingleMediaPreview(
+  inputId,
+  previewId,
+  typeLabel
+){
+
+  const input =
+    document.getElementById(inputId);
+
+  const box =
+    document.getElementById(previewId);
+
+  box.innerHTML = "";
+
+  const file = input.files[0];
+
+  if(!file){
+    return;
+  }
+
+  const row =
+    document.createElement("div");
+
+  row.className = "media-file-row";
+
+  row.innerHTML = `
+    <span class="media-file-name">
+      ${typeLabel}: ${escapeHTML(file.name)}
+    </span>
+    <button
+      type="button"
+      class="remove-media-btn"
+      onclick="removeMediaFile('${inputId}','${previewId}')">
+      REMOVE
+    </button>
+  `;
+
+  box.appendChild(row);
+}
+
+function removeMediaFile(inputId,previewId){
+
+  const input =
+    document.getElementById(inputId);
+
+  input.value = "";
+
+  document.getElementById(
+    previewId
+  ).innerHTML = "";
+}
+
+function clearTattooForm(){
+
+  document.getElementById(
+    "tattooName"
+  ).value="";
+
+  document.getElementById(
+    "shopName"
+  ).value="";
+
+  document.getElementById(
+    "phoneNumber"
+  ).value="";
+
+  document.getElementById(
+    "referenceImages"
+  ).value="";
+
+  document.getElementById(
+    "audioFile"
+  ).value="";
+
+  document.getElementById(
+    "videoFile"
+  ).value="";
+
+  document.getElementById(
+    "filePreview"
+  ).innerHTML="";
+
+  document.getElementById(
+    "audioPreview"
+  ).innerHTML="";
+
+  document.getElementById(
+    "videoPreview"
+  ).innerHTML="";
+}
+
+
+/* =====================================================
+   ADMIN LIST
+===================================================== */
+
+async function renderTattoos(){
+
+  const grid =
+    document.getElementById(
+      "tattooGrid"
+    );
+
+  const query =
+    document
+      .getElementById(
+        "searchInput"
+      )
+      .value
+      .trim()
+      .toLowerCase();
+
+  const filtered =
+    tattoos.filter(
+      tattoo =>
+        tattoo.tattoo_name
+          .toLowerCase()
+          .includes(query)
+    );
+
+  if(!filtered.length){
+
+    grid.innerHTML =
+      `<div class="status">
+        No tattoos found.
+       </div>`;
+
+    return;
+  }
+
+  grid.innerHTML="";
+
+  for(
+    const tattoo of filtered
+  ){
+
+    let image="";
+
+    const first =
+      tattoo.tattoo_references?.[0];
+
+    if(first){
+
+      const result =
+        await supabaseClient.storage
+          .from("tattoo-images")
+          .createSignedUrl(
+            first.image_path,
+            3600
+          );
+
+      image =
+        result.data?.signedUrl || "";
+    }
+
+    const card =
+      document.createElement(
+        "div"
+      );
+
+    card.className =
+      "tattoo-card";
+
+    card.innerHTML=`
+
+      ${
+        image
+        ?
+        `<img
+          class="tattoo-image"
+          src="${image}"
+          alt="Tattoo">`
+        :
+        `<div class="tattoo-image"></div>`
+      }
+
+      <div class="tattoo-content">
+
+        <div class="tattoo-name">
+          ${escapeHTML(
+            tattoo.tattoo_name
+          )}
+        </div>
+
+        <div class="tattoo-meta">
+
+          Shop:
+          ${escapeHTML(
+            tattoo.shop_name || "-"
+          )}
+          <br>
+
+          Number:
+          ${escapeHTML(
+            tattoo.phone_number || "-"
+          )}
+          <br>
+
+          References:
+          ${
+            tattoo.tattoo_references?.length || 0
+          }
+
+        </div>
+
+        <div class="card-actions">
+
+          <button
+            class="small-btn"
+            onclick="editTattoo('${tattoo.id}')">
+            EDIT
+          </button>
+
+          <button
+            class="small-btn delete-btn"
+            onclick="deleteTattoo('${tattoo.id}')">
+            DELETE
+          </button>
+
+        </div>
+
+      </div>
+    `;
+
+    grid.appendChild(
+      card
+    );
+  }
+}
+
+
+/* =====================================================
+   EDIT
+===================================================== */
+
+async function editTattoo(id){
+
+  const tattoo =
+    tattoos.find(
+      x=>x.id===id
+    );
+
+  if(!tattoo){
+    return;
+  }
+
+  const name =
+    prompt(
+      "Tattoo Name",
+      tattoo.tattoo_name
+    );
+
+  if(name===null){
+    return;
+  }
+
+  const shop =
+    prompt(
+      "Shop Name",
+      tattoo.shop_name || ""
+    );
+
+  if(shop===null){
+    return;
+  }
+
+  const number =
+    prompt(
+      "Number",
+      tattoo.phone_number || ""
+    );
+
+  if(number===null){
+    return;
+  }
+
+  const result =
+    await supabaseClient
+      .from("tattoos")
+      .update({
+        tattoo_name:name.trim(),
+        shop_name:
+          shop.trim() || null,
+        phone_number:
+          number.trim() || null
+      })
+      .eq("id",id);
+
+  if(result.error){
+
+    alert(
+      result.error.message
+    );
+
+    return;
+  }
+
+  await loadTattoos();
+}
+
+
+/* =====================================================
+   DELETE
+===================================================== */
+
+async function deleteTattoo(id){
+
+  const tattoo =
+    tattoos.find(
+      x=>x.id===id
+    );
+
+  if(!tattoo){
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      `Delete "${tattoo.tattoo_name}"?`
+    );
+
+  if(!confirmed){
+    return;
+  }
+
+  try{
+
+    /*
+      Delete reference images.
+    */
+
+    const refs =
+      tattoo.tattoo_references || [];
+
+    const imagePaths =
+      refs.map(
+        x=>x.image_path
+      );
+
+    if(imagePaths.length){
+
+      await supabaseClient.storage
+        .from("tattoo-images")
+        .remove(
+          imagePaths
+        );
+    }
+
+
+    if(tattoo.audio_path){
+
+      await supabaseClient.storage
+        .from("tattoo-audio")
+        .remove([
+          tattoo.audio_path
+        ]);
+    }
+
+
+    if(tattoo.video_path){
+
+      await supabaseClient.storage
+        .from("tattoo-video")
+        .remove([
+          tattoo.video_path
+        ]);
+    }
+
+
+    /*
+      DB record.
+      tattoo_references are removed
+      through ON DELETE CASCADE.
+    */
+
+    const result =
+      await supabaseClient
+        .from("tattoos")
+        .delete()
+        .eq("id",id);
+
+    if(result.error){
+
+      throw result.error;
+    }
+
+    await loadTattoos();
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "Unable to delete tattoo."
+    );
+  }
+}
+
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function getExtension(name){
+
+  const parts =
+    name.split(".");
+
+  return (
+    parts[
+      parts.length-1
+    ] || "bin"
+  ).toLowerCase();
+}
+
+
+function escapeHTML(value){
+
+  return String(
+    value ?? ""
+  )
+  .replaceAll("&","&amp;")
+  .replaceAll("<","&lt;")
+  .replaceAll(">","&gt;")
+  .replaceAll('"',"&quot;")
+  .replaceAll("'","&#039;");
+}
+
+
+/* =====================================================
+   START APP
+===================================================== */
+
+window.addEventListener(
+  "DOMContentLoaded",
+  ()=>{
+    // Open scanner immediately; authentication/network never blocks the UI.
+    checkSession().catch(error=>{
+      console.error("Startup error:",error);
+      openScanner();
+    });
+  }
+);
+
+</script>
+
+</body>
+</html>
